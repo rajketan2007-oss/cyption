@@ -476,14 +476,22 @@ body.cursor-badge-active .cursor-dot {
 }
 
 .split-title {
-  font: 700 clamp(3.2rem, 7.5vw, 7.8rem)/0.88 var(--display);
-  letter-spacing: -0.085em;
+  font: 700 clamp(2.8rem, 6.8vw, 7.2rem)/0.9 var(--display);
+  letter-spacing: -0.05em;
   margin: 24px 0 0;
   color: var(--paper);
+  word-break: normal;
+  overflow-wrap: normal;
+  white-space: normal;
 }
 
 .split-title span {
   color: var(--lime);
+}
+
+.word-wrap, .word {
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .char {
@@ -1001,14 +1009,25 @@ body.cursor-badge-active .cursor-dot {
   color: var(--lime);
 }
 
-.cta h2 {
-  font-size: clamp(3rem, 7vw, 8rem);
+.cta h2, .cta-title {
+  font-size: clamp(2.6rem, 6.5vw, 7.2rem);
   max-width: 1150px;
-  line-height: 0.92;
+  line-height: 1.08;
+  letter-spacing: -0.04em;
+  margin: 0;
 }
 
 .cta h2 span {
   color: var(--lime);
+}
+
+.cta h2 .bracket {
+  color: var(--lime);
+  font-weight: 300;
+  display: inline-block;
+  opacity: 0.85;
+  margin: 0 0.08em;
+  vertical-align: 0.02em;
 }
 
 .cta-button {
@@ -1395,10 +1414,18 @@ footer {
   }
 
   .split-title {
-    font-size: clamp(2.8rem, 13vw, 4.8rem);
-    line-height: 0.92;
-    margin-top: 16px;
-    word-break: break-word;
+    font-size: clamp(1.85rem, 8vw, 3.2rem);
+    line-height: 0.96;
+    letter-spacing: -0.035em;
+    margin-top: 14px;
+    word-break: normal;
+    overflow-wrap: normal;
+    white-space: normal;
+  }
+
+  .hero .split-title {
+    font-size: clamp(2.1rem, 9.5vw, 3.5rem);
+    line-height: 0.94;
   }
 
   .hero-bottom {
@@ -1462,6 +1489,12 @@ footer {
     margin-top: 6px;
   }
 
+  /* Touch Active Button Physics */
+  button:active, .talk-button:active, .cta-button:active, .menu-toggle:active, .back-top:active, .feature-card a:active {
+    transform: scale(0.96) !important;
+    transition: transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  }
+
   /* Capabilities (Features) */
   .section {
     padding: 85px 5vw;
@@ -1472,9 +1505,11 @@ footer {
     font-size: 10px;
   }
 
-  .features h2, .process h2 {
-    font-size: clamp(2.5rem, 11vw, 4.2rem);
-    line-height: 0.94;
+  .features h2, .process h2, .faq-top h2, .cta h2 {
+    font-size: clamp(1.85rem, 8vw, 3.2rem);
+    line-height: 0.96;
+    word-break: normal;
+    overflow-wrap: normal;
   }
 
   .intro-copy, .process-heading > p {
@@ -1484,9 +1519,10 @@ footer {
 
   .rail-wrap {
     margin: 40px -5vw -30px;
-    padding: 0 5vw 45px;
+    padding: 0 5vw 35px;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
     scrollbar-width: none;
   }
 
@@ -1505,14 +1541,15 @@ footer {
     width: max-content;
     padding-right: 5vw;
     cursor: auto;
+    touch-action: pan-y;
     scroll-snap-type: x mandatory;
   }
 
   .feature-card {
-    width: min(290px, 78vw);
+    width: min(310px, 82vw);
     height: 380px;
-    padding: 22px;
-    scroll-snap-align: start;
+    padding: 24px;
+    scroll-snap-align: center;
     flex-shrink: 0;
   }
 
@@ -1523,6 +1560,28 @@ footer {
 
   .feature-card p {
     font-size: 12px;
+  }
+
+  .rail-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 28px;
+  }
+
+  .rail-pagination .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(248, 248, 242, 0.25);
+    transition: width 0.3s ease, background 0.3s ease, border-radius 0.3s ease;
+  }
+
+  .rail-pagination .dot.active {
+    width: 22px;
+    border-radius: 4px;
+    background: var(--lime);
   }
 
   /* Process Mobile Timeline */
@@ -1595,14 +1654,15 @@ footer {
 
   .faq-item button {
     grid-template-columns: 36px 1fr auto;
-    gap: 10px;
-    padding: 20px 0;
+    gap: 12px;
+    padding: 22px 0;
+    min-height: 48px;
     font-size: clamp(1.05rem, 4.5vw, 1.35rem);
     line-height: 1.25;
   }
 
   .faq-answer p {
-    margin: 0 0 22px 46px;
+    margin: 0 0 22px 48px;
     font-size: 12.5px;
     line-height: 1.65;
   }
@@ -1617,17 +1677,19 @@ footer {
     margin-bottom: 24px;
   }
 
-  .cta h2 {
-    font-size: clamp(2.4rem, 11vw, 4.5rem);
-    line-height: 0.95;
+  .cta h2, .cta-title {
+    font-size: clamp(1.8rem, 7.8vw, 3rem);
+    line-height: 1.08;
+    letter-spacing: -0.03em;
   }
 
   .cta-button {
     margin-top: 32px;
     padding: 16px 24px;
+    min-height: 48px;
     font-size: 11px;
     width: 100%;
-    max-width: 260px;
+    max-width: 280px;
     justify-content: center;
   }
 
@@ -1636,6 +1698,12 @@ footer {
     gap: 12px;
     padding-top: 40px;
     font-size: 11px;
+  }
+
+  .contact-line a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
   }
 
   .cta-spark {
@@ -1661,6 +1729,8 @@ footer {
 
   .back-top {
     font-size: 11px;
+    min-height: 44px;
+    padding: 10px 14px;
   }
 
   .footer-grid {
@@ -1669,22 +1739,44 @@ footer {
     padding: 36px 0;
   }
 
+  .footer-grid a {
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+  }
+
   .subscribe {
     grid-column: 1;
   }
 
   .subscribe form {
-    margin-top: 12px;
+    margin-top: 14px;
+    flex-direction: column;
+    gap: 12px;
+    border-bottom: 0;
   }
 
   .subscribe input {
     font-size: 13px;
-    padding: 12px 6px;
+    padding: 14px 16px;
+    min-height: 48px;
+    border-bottom: 1px solid var(--line);
+    width: 100%;
   }
 
   .subscribe button {
     font-size: 11px;
-    padding: 12px 10px;
+    padding: 14px 20px;
+    min-height: 48px;
+    background: var(--lime);
+    color: #10120e;
+    width: 100%;
+    justify-content: center;
+    border-radius: 4px;
+  }
+
+  .subscribe button:after {
+    display: none;
   }
 
   .footer-bottom {
@@ -1700,6 +1792,12 @@ footer {
     flex-wrap: wrap;
     gap: 12px 20px;
   }
+
+  .socials a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
 }
 
 /* ==========================================================================
@@ -1708,26 +1806,46 @@ footer {
 
 @media (max-width: 420px) {
   .site-header {
-    height: 64px;
+    height: 58px;
+  }
+
+  .site-header.scrolled {
+    height: 54px;
   }
 
   .brand-logo {
-    width: 108px;
-    height: 39px;
+    width: 105px;
+    height: 38px;
   }
 
   .hero {
-    padding-top: 100px;
+    padding-top: 95px;
   }
 
   .split-title {
-    font-size: 2.6rem;
+    font-size: clamp(1.65rem, 7.6vw, 2.3rem);
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    word-break: normal;
+    overflow-wrap: normal;
+    white-space: normal;
+  }
+
+  .hero .split-title {
+    font-size: clamp(1.85rem, 8.5vw, 2.5rem);
+    line-height: 0.96;
+  }
+
+  .cta h2, .cta-title {
+    font-size: clamp(1.55rem, 7.2vw, 2.2rem);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
   }
 
   .feature-card {
-    width: 84vw;
+    width: 86vw;
     height: 360px;
-    padding: 18px;
+    padding: 20px;
   }
 
   .feature-card h3 {
@@ -1736,11 +1854,17 @@ footer {
 
   .faq-item button {
     grid-template-columns: 28px 1fr auto;
-    font-size: 1.05rem;
+    font-size: 1.02rem;
   }
 
   .faq-answer p {
     margin-left: 36px;
+  }
+}
+
+@media (max-width: 380px) {
+  .clock {
+    display: none !important;
   }
 }
 
