@@ -1,16 +1,21 @@
-/* Cyption Digital: Mobile-First & Desktop Optimized GSAP / Three.js Engine */
+/* ==========================================================================
+   CYPTION DIGITAL — Master GSAP & Three.js Responsive Interaction Engine
+   Unified Breakpoint System & Progressive Animation Architecture
+   ========================================================================== */
 
 const inertiaAvailable = typeof window.InertiaPlugin !== "undefined";
 gsap.registerPlugin(ScrollTrigger, Draggable, MotionPathPlugin, Flip, TextPlugin, ScrollToPlugin);
 if (inertiaAvailable) gsap.registerPlugin(window.InertiaPlugin);
 
+// Single Source of Truth Breakpoints
+const BP = { xs: 360, sm: 480, md: 768, lg: 1024, xl: 1280, xxl: 1600 };
 const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const isFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+const hasFinePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
 document.body.style.overflow = "hidden";
 
-// SplitText Alternative: wraps words in inline-block nowrap containers so letters never break vertically
+// SplitText Alternative: preserves word wrapping so characters never break vertically
 function splitChars(element, byWordOnly = false) {
   if (element.dataset.split) return element.querySelectorAll(byWordOnly ? ".word" : ".char");
   element.dataset.split = "true";
@@ -92,10 +97,10 @@ document.querySelectorAll(".brand-logo img").forEach((image) => {
   image.complete ? makeTransparent() : image.addEventListener("load", makeTransparent, { once: true });
 });
 
-// Smooth Scrolling: Lenis (snappier on touch devices)
+// Smooth Scrolling: Lenis (adaptive lerp across input types)
 if (!prefersReduced && window.Lenis) {
   const lenis = new Lenis({
-    lerp: isTouchDevice ? 0.12 : 0.085,
+    lerp: isTouchDevice ? 0.12 : (window.innerWidth < 1024 ? 0.10 : 0.085),
     smoothWheel: true,
     syncTouch: false
   });
@@ -118,14 +123,14 @@ loader.fromTo(".pre-logo i", { scaleX: 0, transformOrigin: "left" }, { scaleX: 1
   .fromTo(".pre-logo span", { yPercent: 110 }, { yPercent: 0, duration: 0.65, ease: "power4.out" }, "<.08")
   .to(".preloader", { yPercent: -100, duration: 0.7, ease: "power4.inOut", delay: 0.35 });
 
-const titleChars = [...document.querySelectorAll(".split-title")].map(el => splitChars(el, isTouchDevice));
+const titleChars = [...document.querySelectorAll(".split-title")].map(el => splitChars(el, window.innerWidth < 1024));
 if (titleChars.length > 0) {
-  loader.fromTo(titleChars[0], { yPercent: 115, opacity: 0, rotate: isTouchDevice ? 0 : 4 }, { yPercent: 0, opacity: 1, rotate: 0, stagger: isTouchDevice ? 0.03 : 0.015, duration: 0.8, ease: "power4.out" }, "<.35")
+  loader.fromTo(titleChars[0], { yPercent: 115, opacity: 0, rotate: window.innerWidth < 1024 ? 0 : 4 }, { yPercent: 0, opacity: 1, rotate: 0, stagger: window.innerWidth < 1024 ? 0.03 : 0.015, duration: 0.8, ease: "power4.out" }, "<.35")
     .from(".hero-copy, .type-line, .eyebrow", { opacity: 0, y: 20, stagger: 0.1, duration: 0.5 }, "<.35");
 }
 
-// Custom Cursor & Magnetic Listeners (Desktop / Fine Pointer Only)
-if (!prefersReduced && isFinePointer) {
+// Custom Cursor & Magnetic Listeners (Fine Pointer Only)
+if (!prefersReduced && hasFinePointer) {
   const dot = document.querySelector(".cursor-dot"), ring = document.querySelector(".cursor-ring"), cursorText = document.querySelector(".cursor-text");
   if (dot && ring) {
     const dotX = gsap.quickTo(dot, "x", { duration: 0.12, ease: "power3" }), dotY = gsap.quickTo(dot, "y", { duration: 0.12, ease: "power3" });
@@ -187,197 +192,207 @@ function cycleKeyword() {
 setTimeout(cycleKeyword, 1550);
 
 // ==========================================================================
-// GSAP matchMedia Architecture (Desktop vs Mobile separation)
+// UNIFIED MASTER BREAKPOINT SYSTEM (Single Source of Truth)
 // ==========================================================================
 let mm = gsap.matchMedia();
 
-// DESKTOP BREAKPOINT (>= 1024px)
-mm.add("(min-width: 1024px)", () => {
-  // Sticky Header
+mm.add({
+  isMobile: `(max-width: ${BP.md - 1}px)`,
+  isTablet: `(min-width: ${BP.md}px) and (max-width: ${BP.lg - 1}px)`,
+  isDesktop: `(min-width: ${BP.lg}px)`,
+  reduceMotion: `(prefers-reduced-motion: reduce)`
+}, (context) => {
+  let { isMobile, isTablet, isDesktop, reduceMotion } = context.conditions;
+
+  // 1. Sticky Header scroll detection
   ScrollTrigger.create({
-    start: 20,
-    onUpdate: self => document.querySelector(".site-header")?.classList.toggle("scrolled", self.scroll() > 20)
+    start: isDesktop ? 20 : 15,
+    onUpdate: self => document.querySelector(".site-header")?.classList.toggle("scrolled", self.scroll() > (isDesktop ? 20 : 15))
   });
 
-  // Character-level split title reveals
+  // 2. Headline SplitText Stagger (Tiered: Character on desktop, Word on tablet/mobile)
   document.querySelectorAll(".section .split-title, .cta .split-title").forEach((title) => {
-    gsap.from(splitChars(title, false), {
-      scrollTrigger: { trigger: title, start: "top 84%" },
-      yPercent: 105,
-      opacity: 0,
-      rotate: 3,
-      stagger: 0.012,
-      duration: 0.75,
-      ease: "power4.out"
+    if (reduceMotion) {
+      gsap.from(title, { scrollTrigger: { trigger: title, start: "top 88%" }, opacity: 0, duration: 0.6 });
+    } else if (isDesktop) {
+      gsap.from(splitChars(title, false), {
+        scrollTrigger: { trigger: title, start: "top 84%" },
+        yPercent: 105,
+        opacity: 0,
+        rotate: 3,
+        stagger: 0.012,
+        duration: 0.75,
+        ease: "power4.out"
+      });
+    } else {
+      gsap.from(splitChars(title, true), {
+        scrollTrigger: { trigger: title, start: "top 88%" },
+        yPercent: 70,
+        opacity: 0,
+        stagger: 0.035,
+        duration: 0.6,
+        ease: "power3.out"
+      });
+    }
+  });
+
+  // 3. Specia1ne-Style Section Label Stagger
+  document.querySelectorAll(".section-label, .eyebrow").forEach((label) => {
+    const num = label.querySelector(".section-num");
+    const name = label.querySelector(".label-name");
+    const badge = label.querySelector(".active-badge, em");
+
+    gsap.timeline({ scrollTrigger: { trigger: label, start: isDesktop ? "top 88%" : "top 92%" } })
+      .fromTo(num, { opacity: 0, scale: 0.75 }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(2)" })
+      .fromTo(name, { opacity: 0, x: -10 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, "<0.08")
+      .fromTo(badge, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.4, ease: "power2.out" }, "<0.12");
+  });
+
+  // 4. Dynamic Scroll Illumination: Text Opacity & Scale Scrub
+  document.querySelectorAll(".hero-copy p, .intro-copy p, .process-heading > p, .faq-top p").forEach((paragraph) => {
+    gsap.fromTo(paragraph,
+      {
+        opacity: isMobile ? 0.45 : 0.35,
+        scale: isMobile ? 0.97 : 0.955,
+        color: "rgba(248, 248, 242, 0.45)",
+        y: isMobile ? 10 : 16
+      },
+      {
+        scrollTrigger: {
+          trigger: paragraph,
+          start: "top 90%",
+          end: "top 42%",
+          scrub: 0.8
+        },
+        opacity: 1,
+        scale: isMobile ? 1.02 : 1.03,
+        color: "#ffffff",
+        y: 0,
+        ease: "power2.out"
+      }
+    );
+  });
+
+  // 5. Hero Scroll Parallax
+  if (!reduceMotion && (isDesktop || isTablet)) {
+    gsap.to(".hero .split-title", {
+      scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: 1 },
+      y: isDesktop ? 50 : 30,
+      scale: 0.95,
+      opacity: 0.85,
+      ease: "none"
     });
-  });
+  }
 
-  gsap.from(".intro-copy", {
-    scrollTrigger: { trigger: ".features", start: "top 70%" },
-    opacity: 0,
-    y: 35,
-    duration: 0.7,
-    ease: "power3.out"
-  });
-
-  // Hero Scroll Parallax
-  gsap.to(".hero .split-title", {
-    scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: 1 },
-    y: 50,
-    scale: 0.95,
-    opacity: 0.85,
-    ease: "none"
-  });
-
-  gsap.to(".hero-copy", {
-    scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: 1 },
-    y: 30,
-    opacity: 0.65,
-    ease: "none"
-  });
-
-  // Desktop Draggable + Inertia Card Rail
+  // 6. Capability Rail (Desktop Free Drag vs Tablet Snap-assisted vs Mobile Native Momentum Scroll)
   const rail = document.querySelector(".feature-rail"), wrap = document.querySelector(".rail-wrap");
   if (rail && wrap) {
     const cards = [...rail.querySelectorAll(".feature-card")];
     const hint = wrap.querySelector(".drag-hint");
-    let isDragging = false;
-    const maxX = () => Math.min(0, window.innerWidth - rail.scrollWidth - window.innerWidth * 0.04);
 
-    Draggable.create(rail, {
-      type: "x",
-      bounds: () => ({ minX: maxX(), maxX: 0 }),
-      inertia: inertiaAvailable,
-      edgeResistance: 0.75,
-      onDrag: updateCards,
-      onThrowUpdate: updateCards,
-      onPress() {
-        isDragging = true;
-        rail.classList.add("is-dragging");
-        if (hint) hint.innerHTML = "Dragging the story <span>⟷</span>";
-        gsap.to(cards, { y: -7, stagger: 0.025, duration: 0.25, ease: "power2.out" });
-      },
-      onRelease() {
-        isDragging = false;
-        rail.classList.remove("is-dragging");
-        if (hint) hint.innerHTML = "Drag to explore <span>⟷</span>";
-        gsap.to(cards, { y: 0, stagger: { each: 0.025, from: "end" }, duration: 0.6, ease: "elastic.out(1,.5)" });
+    if (isDesktop || isTablet) {
+      let isDragging = false;
+      const maxX = () => Math.min(0, window.innerWidth - rail.scrollWidth - window.innerWidth * 0.04);
+
+      Draggable.create(rail, {
+        type: "x",
+        bounds: () => ({ minX: maxX(), maxX: 0 }),
+        inertia: inertiaAvailable,
+        edgeResistance: 0.75,
+        snap: isTablet ? { x: (endValue) => Math.round(endValue / (cards[0].offsetWidth + 17)) * (cards[0].offsetWidth + 17) } : false,
+        onDrag: updateCards,
+        onThrowUpdate: updateCards,
+        onPress() {
+          isDragging = true;
+          rail.classList.add("is-dragging");
+          if (hint) hint.innerHTML = "Dragging the story <span>⟷</span>";
+          gsap.to(cards, { y: -7, stagger: 0.025, duration: 0.25, ease: "power2.out" });
+        },
+        onRelease() {
+          isDragging = false;
+          rail.classList.remove("is-dragging");
+          if (hint) hint.innerHTML = "Drag to explore <span>⟷</span>";
+          gsap.to(cards, { y: 0, stagger: { each: 0.025, from: "end" }, duration: 0.6, ease: "elastic.out(1,.5)" });
+        }
+      });
+
+      function updateCards() {
+        const x = gsap.getProperty(rail, "x");
+        let closest = 0, best = Infinity;
+        cards.forEach((card, i) => {
+          const center = x + i * (card.offsetWidth + 17) + card.offsetWidth / 2;
+          const distance = Math.abs(center - window.innerWidth / 2) / (window.innerWidth / 2);
+          if (distance < best) { best = distance; closest = i; }
+          gsap.to(card, { scale: Math.max(0.88, 1 - distance * 0.13), opacity: Math.max(0.45, 1 - distance * 0.55), duration: 0.15, overwrite: "auto" });
+        });
+        cards.forEach((card, i) => card.classList.toggle("is-focused", i === closest));
       }
-    });
 
-    function updateCards() {
-      const x = gsap.getProperty(rail, "x");
-      let closest = 0, best = Infinity;
-      cards.forEach((card, i) => {
-        const center = x + i * (card.offsetWidth + 17) + card.offsetWidth / 2;
-        const distance = Math.abs(center - window.innerWidth / 2) / (window.innerWidth / 2);
-        if (distance < best) { best = distance; closest = i; }
-        gsap.to(card, { scale: Math.max(0.88, 1 - distance * 0.13), opacity: Math.max(0.45, 1 - distance * 0.55), duration: 0.15, overwrite: "auto" });
-      });
-      cards.forEach((card, i) => card.classList.toggle("is-focused", i === closest));
+      if (hasFinePointer) {
+        cards.forEach(card => {
+          const mark = card.querySelector(".card-mark"), heading = card.querySelector("h3"), copy = card.querySelector("p"), link = card.querySelector("a");
+          card.addEventListener("pointerenter", () => {
+            if (isDragging) return;
+            gsap.timeline()
+              .to(card, { y: -10, rotate: -1, duration: 0.35, ease: "power3.out" })
+              .to(mark, { scale: 1.17, rotate: 8, duration: 0.35, ease: "back.out(2)" }, 0)
+              .to([heading, copy, link], { x: 7, stagger: 0.04, duration: 0.35, ease: "power3.out" }, 0);
+          });
+          card.addEventListener("pointerleave", () => {
+            if (isDragging) return;
+            gsap.to(card, { y: 0, rotate: 0, duration: 0.55, ease: "elastic.out(1,.5)" });
+            gsap.to([mark, heading, copy, link], { x: 0, scale: 1, rotate: 0, duration: 0.35, stagger: 0.03, ease: "power3.out" });
+          });
+        });
+      }
+
+      ScrollTrigger.create({ trigger: wrap, start: "top bottom", onEnter: updateCards, onUpdate: updateCards });
+    } else {
+      // Mobile native momentum scroll with dot pagination
+      const dots = document.querySelectorAll(".rail-pagination .dot");
+      const updatePaginationAndCards = () => {
+        const wrapRect = wrap.getBoundingClientRect();
+        const centerX = wrapRect.left + wrapRect.width / 2;
+        let closestIdx = 0, minDistance = Infinity;
+
+        cards.forEach((card, idx) => {
+          const cardRect = card.getBoundingClientRect();
+          const cardCenter = cardRect.left + cardRect.width / 2;
+          const distance = Math.abs(centerX - cardCenter);
+          if (distance < minDistance) { minDistance = distance; closestIdx = idx; }
+          const maxDist = wrapRect.width / 2;
+          const ratio = Math.max(0, 1 - distance / maxDist);
+          card.classList.toggle("in-view", ratio > 0.65);
+        });
+
+        dots.forEach((dot, idx) => dot.classList.toggle("active", idx === closestIdx));
+      };
+
+      wrap.addEventListener("scroll", updatePaginationAndCards, { passive: true });
+      updatePaginationAndCards();
     }
-
-    cards.forEach(card => {
-      const mark = card.querySelector(".card-mark"), heading = card.querySelector("h3"), copy = card.querySelector("p"), link = card.querySelector("a");
-      card.addEventListener("pointerenter", () => {
-        if (isDragging) return;
-        gsap.timeline()
-          .to(card, { y: -10, rotate: -1, duration: 0.35, ease: "power3.out" })
-          .to(mark, { scale: 1.17, rotate: 8, duration: 0.35, ease: "back.out(2)" }, 0)
-          .to([heading, copy, link], { x: 7, stagger: 0.04, duration: 0.35, ease: "power3.out" }, 0);
-      });
-      card.addEventListener("pointerleave", () => {
-        if (isDragging) return;
-        gsap.to(card, { y: 0, rotate: 0, duration: 0.55, ease: "elastic.out(1,.5)" });
-        gsap.to([mark, heading, copy, link], { x: 0, scale: 1, rotate: 0, duration: 0.35, stagger: 0.03, ease: "power3.out" });
-      });
-    });
-
-    ScrollTrigger.create({ trigger: wrap, start: "top bottom", onEnter: updateCards, onUpdate: updateCards });
   }
 
-  // Desktop Pinned Scrollytelling Process with MotionPath
-  const processTL = gsap.timeline({
-    scrollTrigger: { trigger: ".process", start: "top top", end: "+=1700", pin: true, scrub: 1, anticipatePin: 1 }
-  });
-  processTL.to(".travel-dot", { motionPath: { path: "#travel-path", align: "#travel-path", alignOrigin: [0.5, 0.5] }, ease: "none", duration: 3 }, 0)
-    .to(".step-one", { opacity: 1, duration: 0.55 }, 0).to(".step-one .ghost", { color: "#383838", scale: 1.05, duration: 0.5 }, 0)
-    .to(".step-two", { opacity: 1, duration: 0.55 }, 1).to(".step-two .ghost", { color: "#383838", scale: 1.05, duration: 0.5 }, 1)
-    .to(".step-three", { opacity: 1, duration: 0.55 }, 2).to(".step-three .ghost", { color: "#383838", scale: 1.05, duration: 0.5 }, 2);
-});
-
-// MOBILE & TABLET BREAKPOINT (< 1024px)
-mm.add("(max-width: 1023px)", () => {
-  // Mobile Header shrink
-  ScrollTrigger.create({
-    start: 15,
-    onUpdate: self => document.querySelector(".site-header")?.classList.toggle("scrolled", self.scroll() > 15)
-  });
-
-  // Line/Word-level split title reveals (Fast & light on mobile CPU)
-  document.querySelectorAll(".section .split-title, .cta .split-title").forEach((title) => {
-    gsap.from(splitChars(title, true), {
-      scrollTrigger: { trigger: title, start: "top 88%" },
-      yPercent: 70,
-      opacity: 0,
-      stagger: 0.04,
-      duration: 0.6,
-      ease: "power3.out"
+  // 7. Scrollytelling Process Section (Pinned on Desktop/Tablet vs Unpinned on Mobile)
+  if (!reduceMotion && (isDesktop || isTablet)) {
+    const processTL = gsap.timeline({
+      scrollTrigger: { trigger: ".process", start: "top top", end: "+=1700", pin: true, scrub: 1, anticipatePin: 1 }
     });
-  });
-
-  // Mobile Unpinned Vertical Process Stack with ScrollTriggers
-  document.querySelectorAll(".process-step").forEach((step) => {
-    gsap.from(step, {
-      scrollTrigger: {
-        trigger: step,
-        start: "top 85%",
-        toggleActions: "play none none reverse"
-      },
-      opacity: 0,
-      y: 28,
-      duration: 0.55,
-      ease: "power2.out"
+    processTL.to(".travel-dot", { motionPath: { path: "#travel-path", align: "#travel-path", alignOrigin: [0.5, 0.5] }, ease: "none", duration: 3 }, 0)
+      .to(".step-one", { opacity: 1, duration: 0.55 }, 0).to(".step-one .ghost", { color: "#383838", scale: 1.05, duration: 0.5 }, 0)
+      .to(".step-two", { opacity: 1, duration: 0.55 }, 1).to(".step-two .ghost", { color: "#383838", scale: 1.05, duration: 0.5 }, 1)
+      .to(".step-three", { opacity: 1, duration: 0.55 }, 2).to(".step-three .ghost", { color: "#383838", scale: 1.05, duration: 0.5 }, 2);
+  } else {
+    // Unpinned vertical stack with scroll trigger reveals on mobile
+    document.querySelectorAll(".process-step").forEach((step) => {
+      gsap.from(step, {
+        scrollTrigger: { trigger: step, start: "top 85%", toggleActions: "play none none reverse" },
+        opacity: 0,
+        y: 28,
+        duration: 0.55,
+        ease: "power2.out"
+      });
     });
-  });
-
-  // Mobile Native Momentum Scroll Rail & Dot-Pagination Sync
-  const railWrap = document.querySelector(".rail-wrap");
-  const featureCards = document.querySelectorAll(".feature-card");
-  const dots = document.querySelectorAll(".rail-pagination .dot");
-
-  if (railWrap && featureCards.length > 0) {
-    const updatePaginationAndCards = () => {
-      const wrapRect = railWrap.getBoundingClientRect();
-      const centerX = wrapRect.left + wrapRect.width / 2;
-      let closestIdx = 0, minDistance = Infinity;
-
-      featureCards.forEach((card, idx) => {
-        const cardRect = card.getBoundingClientRect();
-        const cardCenter = cardRect.left + cardRect.width / 2;
-        const distance = Math.abs(centerX - cardCenter);
-
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestIdx = idx;
-        }
-
-        const maxDist = wrapRect.width / 2;
-        const ratio = Math.max(0, 1 - distance / maxDist);
-        if (ratio > 0.65) {
-          card.classList.add("in-view");
-        } else {
-          card.classList.remove("in-view");
-        }
-      });
-
-      dots.forEach((dot, idx) => {
-        dot.classList.toggle("active", idx === closestIdx);
-      });
-    };
-
-    railWrap.addEventListener("scroll", updatePaginationAndCards, { passive: true });
-    updatePaginationAndCards();
   }
 });
 
@@ -428,17 +443,19 @@ document.querySelector(".subscribe form")?.addEventListener("submit", (e) => {
 });
 
 // ==========================================================================
-// Three.js Hero Canvas: Optimized with Lazy Init, Pause on Background & Gyro
+// Three.js Hero Canvas: Three-Tier Responsive Architecture
 // ==========================================================================
 if (!prefersReduced && window.THREE) {
   const mount = document.querySelector("#three-canvas");
   if (mount) {
-    const isMobile = window.innerWidth < 1024;
+    const isMobile = window.innerWidth < BP.md;
+    const isTablet = window.innerWidth >= BP.md && window.innerWidth < BP.lg;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, mount.clientWidth / mount.clientHeight, 0.1, 100);
     const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: !isMobile, powerPreference: "high-performance" });
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+    const maxDpr = isMobile || isTablet ? 1.5 : 2.0;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     mount.appendChild(renderer.domElement);
     camera.position.z = 12;
@@ -446,8 +463,8 @@ if (!prefersReduced && window.THREE) {
     const group = new THREE.Group();
     scene.add(group);
 
-    // Particle field count (45 on mobile, 200 on desktop)
-    const particleCount = isMobile ? 45 : 200;
+    // Tiered Particle Field Count (200 on Desktop, 80 on Tablet, 45 on Mobile)
+    const particleCount = isMobile ? 45 : (isTablet ? 80 : 200);
     const positions = [];
     for (let i = 0; i < particleCount; i++) {
       const radius = 4 + Math.random() * 6, a = Math.random() * Math.PI * 2, b = Math.acos(2 * Math.random() - 1);
@@ -458,8 +475,8 @@ if (!prefersReduced && window.THREE) {
     const points = new THREE.Points(particleGeometry, new THREE.PointsMaterial({ size: isMobile ? 0.05 : 0.04, color: 0xff725e, transparent: true, opacity: 0.75 }));
     group.add(points);
 
-    // Geometric Icosahedrons (4 on mobile, 11 on desktop)
-    const meshCount = isMobile ? 4 : 11;
+    // Tiered Geometric Icosahedrons (11 on Desktop, 6 on Tablet, 4 on Mobile)
+    const meshCount = isMobile ? 4 : (isTablet ? 6 : 11);
     const geo = new THREE.IcosahedronGeometry(0.33, 1);
     const material = new THREE.MeshBasicMaterial({ color: 0xd8ff3e, wireframe: true, transparent: true, opacity: 0.55 });
     for (let i = 0; i < meshCount; i++) {
@@ -471,8 +488,8 @@ if (!prefersReduced && window.THREE) {
       gsap.to(mesh.scale, { x: 1, y: 1, z: 1, delay: 0.9 + i * 0.055, duration: 0.75, ease: "back.out(1.7)" });
     }
 
-    // Pointer move tilt for desktop; Gyroscope orientation for mobile
-    if (isFinePointer) {
+    // Input-aware Interaction: Pointer Tilt on Fine Pointers, Gyroscope on Mobile
+    if (hasFinePointer) {
       const groupX = gsap.quickTo(group.rotation, "x", { duration: 0.6, ease: "power3" });
       const groupY = gsap.quickTo(group.rotation, "y", { duration: 0.6, ease: "power3" });
       mount.closest(".hero")?.addEventListener("pointermove", e => {
@@ -499,7 +516,7 @@ if (!prefersReduced && window.THREE) {
     }
     render();
 
-    // Pause Three.js when tab is hidden or canvas is off-screen
+    // Lifecycle Management: Pause on Background & Canvas Off-screen
     document.addEventListener("visibilitychange", () => {
       isRunning = !document.hidden;
       if (isRunning) render();

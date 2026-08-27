@@ -3,6 +3,15 @@
    ========================================================================== */
 
 :root {
+  /* Breakpoint Tokens (Single Source of Truth) */
+  --bp-xs: 360px;
+  --bp-sm: 480px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+  --bp-2xl: 1600px;
+
+  /* Color & Design Tokens */
   --ink: #10120e;
   --bg-dark: #10120e;
   --bg-card: #181b15;
@@ -17,6 +26,10 @@
   --mono: "DM Mono", monospace;
   --display: "Space Grotesk", sans-serif;
   --body: "Manrope", sans-serif;
+
+  /* Fluid Spacing & Container Tokens */
+  --container-padding: clamp(1.25rem, 4.5vw, 5rem);
+  --section-padding-y: clamp(4.5rem, 8vw, 9rem);
 }
 
 *, *::before, *::after {
@@ -40,6 +53,17 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Accessibility Focus States */
+:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 3px;
+}
+
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 3px;
 }
 
 a {
@@ -392,10 +416,11 @@ body.cursor-badge-active .cursor-dot {
 
 .hero {
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
   overflow: hidden;
   border-bottom: 1px solid var(--line);
-  padding-top: 150px;
+  padding-top: clamp(100px, 12vw, 150px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -446,7 +471,7 @@ body.cursor-badge-active .cursor-dot {
 .hero-content {
   position: relative;
   z-index: 1;
-  padding: 30px 10vw 0 10vw;
+  padding: 20px var(--container-padding) 0;
   max-width: 1400px;
 }
 
@@ -454,25 +479,38 @@ body.cursor-badge-active .cursor-dot {
   font: 10px var(--mono);
   letter-spacing: 0.07em;
   text-transform: uppercase;
-}
-
-.eyebrow {
   display: flex;
-  gap: 9px;
   align-items: center;
+  gap: 8px;
   color: var(--text-muted);
 }
 
-.eyebrow span {
-  width: 30px;
-  height: 1px;
-  background: var(--lime);
+.section-num {
+  color: var(--lime);
+  font-weight: 700;
+  font-size: 11px;
 }
 
-.eyebrow em {
+.slash {
+  color: var(--text-subtle);
+  opacity: 0.6;
+}
+
+.label-name {
+  letter-spacing: 0.08em;
+  color: var(--paper);
+}
+
+.active-badge, .eyebrow em {
   font-style: normal;
   color: var(--text-subtle);
   margin-left: auto;
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
+  background: rgba(248, 248, 242, 0.04);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
 }
 
 .split-title {
@@ -507,17 +545,27 @@ body.cursor-badge-active .cursor-dot {
 }
 
 .hero-copy {
-  width: min(620px, 58%);
-  font-size: 12px;
-  line-height: 1.68;
+  width: min(640px, 60%);
+  font-size: clamp(12.5px, 0.95vw, 14.5px);
+  line-height: 1.72;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 24px;
   color: var(--text-muted);
 }
 
-.hero-copy p {
+.hero-copy p, .intro-copy p, .process-heading > p, .faq-top p {
   margin: 0;
+  transform-origin: left center;
+  will-change: transform, opacity, color;
+}
+
+.intro-copy p {
+  margin-bottom: 18px;
+}
+
+.intro-copy p:last-child {
+  margin-bottom: 0;
 }
 
 .type-line {
@@ -714,6 +762,21 @@ body.cursor-badge-active .cursor-dot {
               opacity 0.25s ease;
   user-select: none;
   -webkit-user-select: none;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  font: 10px var(--mono);
+  letter-spacing: 0.04em;
+}
+
+.card-tag {
+  font-size: 9px;
+  opacity: 0.7;
+  letter-spacing: 0.03em;
 }
 
 .feature-card > span, .feature-card a {
@@ -1039,10 +1102,28 @@ body.cursor-badge-active .cursor-dot {
   font-size: 11px;
   padding: 18px 26px;
   font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .cta-button span {
   color: #10120e;
+}
+
+.btn-bracket {
+  opacity: 0.6;
+  font-weight: 400;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  display: inline-block;
+}
+
+.cta-button:hover .btn-bracket:first-child {
+  transform: translateX(-3px);
+}
+
+.cta-button:hover .btn-bracket:last-of-type {
+  transform: translateX(3px);
 }
 
 .cta-button:hover {
