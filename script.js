@@ -184,7 +184,8 @@ gsap.to(".scroll-cue span", { y: 13, duration: 0.8, repeat: -1, yoyo: true, ease
 const marqueeA = gsap.to(".marquee-a", { xPercent: -50, duration: 28, ease: "none", repeat: -1 });
 const marqueeB = gsap.fromTo(".marquee-b", { xPercent: -50 }, { xPercent: 0, duration: 24, ease: "none", repeat: -1 });
 
-let keywordIndex = 0; const keywords = ["SEO", "PPC", "SOCIAL", "EMAIL", "CONTENT"];
+let keywordIndex = 0;
+const keywords = ["GSAP", "SEO", "PPC", "THREE.JS", "PERFORMANCE", "CREATIVE"];
 function cycleKeyword() {
   keywordIndex = (keywordIndex + 1) % keywords.length;
   gsap.to("#typed-word", { duration: 0.45, text: keywords[keywordIndex], ease: "none", delay: 1.05, onComplete: cycleKeyword });
@@ -273,104 +274,130 @@ mm.add({
     );
   });
 
-  // 5. Hero Scroll Parallax
-  if (!reduceMotion && (isDesktop || isTablet)) {
-    gsap.to(".hero .split-title", {
-      scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: 1 },
-      y: isDesktop ? 50 : 30,
-      scale: 0.95,
-      opacity: 0.85,
+  // 5. Hero Scroll Exit: Size and Opacity Decrease on Scroll (Desktop, Tablet & Mobile)
+  if (!reduceMotion) {
+    gsap.to(".hero-content", {
+      scrollTrigger: {
+        trigger: ".hero",
+        start: "top top",
+        end: "bottom top",
+        scrub: 0.8
+      },
+      y: isMobile ? -35 : -55,
+      scale: isMobile ? 0.86 : 0.88,
+      opacity: 0.12,
+      ease: "power1.out"
+    });
+
+    gsap.to("#three-canvas", {
+      scrollTrigger: {
+        trigger: ".hero",
+        start: "top top",
+        end: "bottom top",
+        scrub: 1
+      },
+      y: -30,
+      opacity: 0,
       ease: "none"
     });
   }
 
-  // 6. Capability Rail (Desktop Free Drag vs Tablet Snap-assisted vs Mobile Native Momentum Scroll)
+  // 6. Capability Rail (Unified Draggable on Desktop, Tablet & Mobile)
   const rail = document.querySelector(".feature-rail"), wrap = document.querySelector(".rail-wrap");
   if (rail && wrap) {
     const cards = [...rail.querySelectorAll(".feature-card")];
     const hint = wrap.querySelector(".drag-hint");
+    const dots = document.querySelectorAll(".rail-pagination .dot");
+    let isDragging = false;
 
-    if (isDesktop || isTablet) {
-      let isDragging = false;
-      const maxX = () => Math.min(0, window.innerWidth - rail.scrollWidth - window.innerWidth * 0.04);
+    const cardGap = isMobile ? 14 : 17;
+    const cardStep = () => (cards[0] ? cards[0].offsetWidth + cardGap : 320);
+    const maxX = () => Math.min(0, wrap.clientWidth - rail.scrollWidth - (isMobile ? 24 : window.innerWidth * 0.04));
 
-      Draggable.create(rail, {
-        type: "x",
-        bounds: () => ({ minX: maxX(), maxX: 0 }),
-        inertia: inertiaAvailable,
-        edgeResistance: 0.75,
-        snap: isTablet ? { x: (endValue) => Math.round(endValue / (cards[0].offsetWidth + 17)) * (cards[0].offsetWidth + 17) } : false,
-        onDrag: updateCards,
-        onThrowUpdate: updateCards,
-        onPress() {
-          isDragging = true;
-          rail.classList.add("is-dragging");
-          if (hint) hint.innerHTML = "Dragging the story <span>⟷</span>";
-          gsap.to(cards, { y: -7, stagger: 0.025, duration: 0.25, ease: "power2.out" });
-        },
-        onRelease() {
-          isDragging = false;
-          rail.classList.remove("is-dragging");
-          if (hint) hint.innerHTML = "Drag to explore <span>⟷</span>";
-          gsap.to(cards, { y: 0, stagger: { each: 0.025, from: "end" }, duration: 0.6, ease: "elastic.out(1,.5)" });
-        }
+    const snapPoints = (endValue) => {
+      const step = cardStep();
+      const snapped = Math.round(endValue / step) * step;
+      return Math.max(maxX(), Math.min(0, snapped));
+    };
+
+    Draggable.create(rail, {
+      type: "x",
+      bounds: () => ({ minX: maxX(), maxX: 0 }),
+      inertia: inertiaAvailable,
+      edgeResistance: 0.75,
+      allowNativeVerticalScrolling: true,
+      dragClickables: false,
+      snap: isMobile || isTablet ? { x: snapPoints } : false,
+      onDrag: updateCards,
+      onThrowUpdate: updateCards,
+      onPress() {
+        isDragging = true;
+        rail.classList.add("is-dragging");
+        if (hint) hint.innerHTML = "Dragging the story <span>⟷</span>";
+        gsap.to(cards, { y: -5, stagger: 0.02, duration: 0.2, ease: "power2.out" });
+      },
+      onRelease() {
+        isDragging = false;
+        rail.classList.remove("is-dragging");
+        if (hint) hint.innerHTML = "Drag to explore <span>⟷</span>";
+        gsap.to(cards, { y: 0, stagger: { each: 0.02, from: "end" }, duration: 0.5, ease: "elastic.out(1,.5)" });
+      }
+    });
+
+    function updateCards() {
+      const wrapRect = wrap.getBoundingClientRect();
+      const wrapCenter = wrapRect.left + wrapRect.width / 2;
+      let closest = 0, best = Infinity;
+
+      cards.forEach((card, i) => {
+        const cardRect = card.getBoundingClientRect();
+        const cardCenter = cardRect.left + cardRect.width / 2;
+        const distance = Math.abs(cardCenter - wrapCenter);
+        if (distance < best) { best = distance; closest = i; }
+
+        const distRatio = distance / (wrapRect.width / 2);
+        const cardScale = isMobile ? Math.max(0.93, 1 - distRatio * 0.07) : Math.max(0.88, 1 - distRatio * 0.13);
+        const cardOpacity = isMobile ? Math.max(0.7, 1 - distRatio * 0.35) : Math.max(0.45, 1 - distRatio * 0.55);
+        gsap.to(card, { scale: cardScale, opacity: cardOpacity, duration: 0.15, overwrite: "auto" });
       });
 
-      function updateCards() {
-        const x = gsap.getProperty(rail, "x");
-        let closest = 0, best = Infinity;
-        cards.forEach((card, i) => {
-          const center = x + i * (card.offsetWidth + 17) + card.offsetWidth / 2;
-          const distance = Math.abs(center - window.innerWidth / 2) / (window.innerWidth / 2);
-          if (distance < best) { best = distance; closest = i; }
-          gsap.to(card, { scale: Math.max(0.88, 1 - distance * 0.13), opacity: Math.max(0.45, 1 - distance * 0.55), duration: 0.15, overwrite: "auto" });
-        });
-        cards.forEach((card, i) => card.classList.toggle("is-focused", i === closest));
-      }
+      cards.forEach((card, i) => {
+        card.classList.toggle("is-focused", i === closest);
+        card.classList.toggle("in-view", i === closest);
+      });
 
-      if (hasFinePointer) {
-        cards.forEach(card => {
-          const mark = card.querySelector(".card-mark"), heading = card.querySelector("h3"), copy = card.querySelector("p"), link = card.querySelector("a");
-          card.addEventListener("pointerenter", () => {
-            if (isDragging) return;
-            gsap.timeline()
-              .to(card, { y: -10, rotate: -1, duration: 0.35, ease: "power3.out" })
-              .to(mark, { scale: 1.17, rotate: 8, duration: 0.35, ease: "back.out(2)" }, 0)
-              .to([heading, copy, link], { x: 7, stagger: 0.04, duration: 0.35, ease: "power3.out" }, 0);
-          });
-          card.addEventListener("pointerleave", () => {
-            if (isDragging) return;
-            gsap.to(card, { y: 0, rotate: 0, duration: 0.55, ease: "elastic.out(1,.5)" });
-            gsap.to([mark, heading, copy, link], { x: 0, scale: 1, rotate: 0, duration: 0.35, stagger: 0.03, ease: "power3.out" });
-          });
-        });
-      }
-
-      ScrollTrigger.create({ trigger: wrap, start: "top bottom", onEnter: updateCards, onUpdate: updateCards });
-    } else {
-      // Mobile native momentum scroll with dot pagination
-      const dots = document.querySelectorAll(".rail-pagination .dot");
-      const updatePaginationAndCards = () => {
-        const wrapRect = wrap.getBoundingClientRect();
-        const centerX = wrapRect.left + wrapRect.width / 2;
-        let closestIdx = 0, minDistance = Infinity;
-
-        cards.forEach((card, idx) => {
-          const cardRect = card.getBoundingClientRect();
-          const cardCenter = cardRect.left + cardRect.width / 2;
-          const distance = Math.abs(centerX - cardCenter);
-          if (distance < minDistance) { minDistance = distance; closestIdx = idx; }
-          const maxDist = wrapRect.width / 2;
-          const ratio = Math.max(0, 1 - distance / maxDist);
-          card.classList.toggle("in-view", ratio > 0.65);
-        });
-
-        dots.forEach((dot, idx) => dot.classList.toggle("active", idx === closestIdx));
-      };
-
-      wrap.addEventListener("scroll", updatePaginationAndCards, { passive: true });
-      updatePaginationAndCards();
+      dots.forEach((dot, i) => dot.classList.toggle("active", i === closest));
     }
+
+    // Dot navigation tap triggers
+    dots.forEach((dot, i) => {
+      dot.style.cursor = "pointer";
+      dot.addEventListener("click", () => {
+        const targetX = Math.max(maxX(), Math.min(0, -i * cardStep()));
+        gsap.to(rail, { x: targetX, duration: 0.65, ease: "power3.out", onUpdate: updateCards });
+      });
+    });
+
+    if (hasFinePointer) {
+      cards.forEach(card => {
+        const mark = card.querySelector(".card-mark"), heading = card.querySelector("h3"), copy = card.querySelector("p"), link = card.querySelector("a");
+        card.addEventListener("pointerenter", () => {
+          if (isDragging) return;
+          gsap.timeline()
+            .to(card, { y: -10, rotate: -1, duration: 0.35, ease: "power3.out" })
+            .to(mark, { scale: 1.17, rotate: 8, duration: 0.35, ease: "back.out(2)" }, 0)
+            .to([heading, copy, link], { x: 7, stagger: 0.04, duration: 0.35, ease: "power3.out" }, 0);
+        });
+        card.addEventListener("pointerleave", () => {
+          if (isDragging) return;
+          gsap.to(card, { y: 0, rotate: 0, duration: 0.55, ease: "elastic.out(1,.5)" });
+          gsap.to([mark, heading, copy, link], { x: 0, scale: 1, rotate: 0, duration: 0.35, stagger: 0.03, ease: "power3.out" });
+        });
+      });
+    }
+
+    updateCards();
+    ScrollTrigger.create({ trigger: wrap, start: "top bottom", onEnter: updateCards, onUpdate: updateCards });
   }
 
   // 7. Scrollytelling Process Section (Pinned on Desktop/Tablet vs Unpinned on Mobile)
