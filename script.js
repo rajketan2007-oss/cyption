@@ -72,12 +72,44 @@ if (titleChars.length > 0) {
 }
 
 if (!prefersReduced) {
-  const dot = document.querySelector(".cursor-dot"), ring = document.querySelector(".cursor-ring");
+  const dot = document.querySelector(".cursor-dot"), ring = document.querySelector(".cursor-ring"), cursorText = document.querySelector(".cursor-text");
   if (dot && ring) {
     const dotX = gsap.quickTo(dot, "x", { duration: .12, ease: "power3" }), dotY = gsap.quickTo(dot, "y", { duration: .12, ease: "power3" });
     const ringX = gsap.quickTo(ring, "x", { duration: .38, ease: "power3" }), ringY = gsap.quickTo(ring, "y", { duration: .38, ease: "power3" });
     window.addEventListener("pointermove", (e) => { dotX(e.clientX - 3.5); dotY(e.clientY - 3.5); ringX(e.clientX); ringY(e.clientY); });
-    document.querySelectorAll("a,button,.feature-card").forEach((el) => { el.addEventListener("pointerenter", () => gsap.to(ring, { scale: 1.9, duration: .25 })); el.addEventListener("pointerleave", () => gsap.to(ring, { scale: 1, duration: .25 })); });
+    
+    const setCursorBadge = (label) => {
+      if (cursorText && label) {
+        cursorText.textContent = label;
+        ring.classList.add("has-badge");
+        document.body.classList.add("cursor-badge-active");
+      } else {
+        ring.classList.remove("has-badge");
+        document.body.classList.remove("cursor-badge-active");
+      }
+    };
+
+    document.querySelectorAll(".feature-card").forEach((card) => {
+      card.addEventListener("pointerenter", () => setCursorBadge("Explore ↗"));
+      card.addEventListener("pointerleave", () => setCursorBadge(null));
+    });
+
+    const railWrapEl = document.querySelector(".rail-wrap");
+    if (railWrapEl) {
+      railWrapEl.addEventListener("pointerenter", (e) => { if (!e.target.closest(".feature-card")) setCursorBadge("Drag ⟷"); });
+      railWrapEl.addEventListener("pointerleave", () => setCursorBadge(null));
+    }
+
+    document.querySelectorAll(".faq-item button").forEach((btn) => {
+      btn.addEventListener("pointerenter", () => setCursorBadge("Read +"));
+      btn.addEventListener("pointerleave", () => setCursorBadge(null));
+    });
+
+    document.querySelectorAll(".magnetic, .talk-button, .back-top, .desktop-nav a").forEach((el) => {
+      el.addEventListener("pointerenter", () => gsap.to(ring, { scale: 1.45, borderColor: "var(--lime)", duration: .25 }));
+      el.addEventListener("pointerleave", () => gsap.to(ring, { scale: 1, borderColor: "rgba(255,255,255,0.9)", duration: .25 }));
+    });
+
     document.querySelectorAll(".magnetic").forEach((button) => {
       button.addEventListener("pointermove", (e) => { const r = button.getBoundingClientRect(); gsap.to(button, { x: (e.clientX-r.left-r.width/2)*.16, y: (e.clientY-r.top-r.height/2)*.16, duration: .35, ease: "power2.out" }); });
       button.addEventListener("pointerleave", () => gsap.to(button, { x: 0, y: 0, duration: .6, ease: "elastic.out(1,.35)" }));
@@ -99,14 +131,31 @@ let keywordIndex = 0; const keywords = ["SEO", "PPC", "SOCIAL", "EMAIL", "CONTEN
 function cycleKeyword() { keywordIndex = (keywordIndex + 1) % keywords.length; gsap.to("#typed-word", { duration: .45, text: keywords[keywordIndex], ease: "none", delay: 1.05, onComplete: cycleKeyword }); }
 setTimeout(cycleKeyword, 1550);
 
+// Nothin-inspired Editorial Split Line & Character reveals
 document.querySelectorAll(".section .split-title, .cta .split-title").forEach((title) => {
-  gsap.from(splitChars(title), { scrollTrigger: { trigger: title, start: "top 84%" }, yPercent: 105, opacity: 0, rotate: 3, stagger: .012, duration: .7, ease: "power4.out" });
+  gsap.from(splitChars(title), { scrollTrigger: { trigger: title, start: "top 84%" }, yPercent: 105, opacity: 0, rotate: 3, stagger: .012, duration: .75, ease: "power4.out" });
 });
 
 const bc = document.querySelector(".breadcrumb");
 if (bc) gsap.from(bc, { opacity: 0, y: -10, duration: .5, delay: .9 });
 
-gsap.from(".intro-copy", { scrollTrigger: { trigger: ".features", start: "top 70%" }, opacity: 0, y: 35, duration: .7 });
+gsap.from(".intro-copy", { scrollTrigger: { trigger: ".features", start: "top 70%" }, opacity: 0, y: 35, duration: .7, ease: "power3.out" });
+
+// Hero Scroll Parallax & Typography depth (inspired by noth.in)
+gsap.to(".hero .split-title", {
+  scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: 1 },
+  y: 50,
+  scale: 0.95,
+  opacity: 0.85,
+  ease: "none"
+});
+
+gsap.to(".hero-copy", {
+  scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: 1 },
+  y: 30,
+  opacity: 0.65,
+  ease: "none"
+});
 
 // Desktop card rail uses both Draggable and InertiaPlugin; mobile retains natural scroll.
 if (!prefersReduced && window.innerWidth > 760) {
