@@ -212,11 +212,24 @@ if (mobileRailWrap) {
 
 window.addEventListener("load", () => ScrollTrigger.refresh());
 
-const processTL = gsap.timeline({ scrollTrigger: { trigger: ".process", start: "top top", end: "+=1700", pin: true, scrub: 1, anticipatePin: 1 } });
-processTL.to(".travel-dot", { motionPath: { path: "#travel-path", align: "#travel-path", alignOrigin: [.5,.5] }, ease: "none", duration: 3 }, 0)
-  .to(".step-one", { opacity: 1, duration: .55 }, 0).to(".step-one .ghost", { color: "#383838", scale: 1.05, duration: .5 }, 0)
-  .to(".step-two", { opacity: 1, duration: .55 }, 1).to(".step-two .ghost", { color: "#383838", scale: 1.05, duration: .5 }, 1)
-  .to(".step-three", { opacity: 1, duration: .55 }, 2).to(".step-three .ghost", { color: "#383838", scale: 1.05, duration: .5 }, 2);
+// Process Section: desktop uses pinned SVG scrub; mobile uses responsive scroll reveals
+if (!prefersReduced && window.innerWidth > 760) {
+  const processTL = gsap.timeline({ scrollTrigger: { trigger: ".process", start: "top top", end: "+=1700", pin: true, scrub: 1, anticipatePin: 1 } });
+  processTL.to(".travel-dot", { motionPath: { path: "#travel-path", align: "#travel-path", alignOrigin: [.5,.5] }, ease: "none", duration: 3 }, 0)
+    .to(".step-one", { opacity: 1, duration: .55 }, 0).to(".step-one .ghost", { color: "#383838", scale: 1.05, duration: .5 }, 0)
+    .to(".step-two", { opacity: 1, duration: .55 }, 1).to(".step-two .ghost", { color: "#383838", scale: 1.05, duration: .5 }, 1)
+    .to(".step-three", { opacity: 1, duration: .55 }, 2).to(".step-three .ghost", { color: "#383838", scale: 1.05, duration: .5 }, 2);
+} else {
+  document.querySelectorAll(".process-step").forEach((step, idx) => {
+    gsap.from(step, {
+      scrollTrigger: { trigger: step, start: "top 88%" },
+      opacity: 0,
+      y: 25,
+      duration: 0.6,
+      ease: "power2.out"
+    });
+  });
+}
 
 document.querySelectorAll(".faq-item button").forEach((button) => button.addEventListener("click", () => {
   const item = button.parentElement, answer = item.querySelector(".faq-answer"), state = Flip.getState(answer);
@@ -226,8 +239,19 @@ document.querySelectorAll(".faq-item button").forEach((button) => button.addEven
 
 const menuToggle = document.querySelector(".menu-toggle"), mobileMenu = document.querySelector(".mobile-menu");
 if (menuToggle && mobileMenu) {
-  menuToggle.addEventListener("click", () => { const state = Flip.getState(mobileMenu); const open = !menuToggle.classList.contains("active"); menuToggle.classList.toggle("active", open); mobileMenu.style.visibility = open ? "visible" : "hidden"; gsap.to(mobileMenu, { clipPath: open ? "inset(0 0 0% 0)" : "inset(0 0 100% 0)", duration: .6, ease: "power4.inOut" }); Flip.from(state, { duration: .35, ease: "power2.out" }); if(open) gsap.from(".mobile-menu a", { y: 25, opacity: 0, stagger: .06, delay: .22 }); });
-  document.querySelectorAll(".mobile-menu a").forEach(a => a.addEventListener("click", () => menuToggle.click()));
+  menuToggle.addEventListener("click", () => {
+    const state = Flip.getState(mobileMenu);
+    const open = !menuToggle.classList.contains("active");
+    menuToggle.classList.toggle("active", open);
+    document.body.style.overflow = open ? "hidden" : "";
+    mobileMenu.style.visibility = open ? "visible" : "hidden";
+    gsap.to(mobileMenu, { clipPath: open ? "inset(0 0 0% 0)" : "inset(0 0 100% 0)", duration: .55, ease: "power4.inOut" });
+    Flip.from(state, { duration: .35, ease: "power2.out" });
+    if(open) gsap.from(".mobile-menu a", { y: 25, opacity: 0, stagger: .06, delay: .2 });
+  });
+  document.querySelectorAll(".mobile-menu a").forEach(a => a.addEventListener("click", () => {
+    if (menuToggle.classList.contains("active")) menuToggle.click();
+  }));
 }
 
 document.querySelector(".back-top")?.addEventListener("click", () => gsap.to(window, { duration: 1.2, scrollTo: 0, ease: "power3.inOut" }));
