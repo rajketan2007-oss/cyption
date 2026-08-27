@@ -123,6 +123,44 @@ if (!prefersReduced && window.innerWidth > 760) {
   }
 }
 
+// Mobile touch feedback and active card center detection
+const featureCards = document.querySelectorAll(".feature-card");
+featureCards.forEach((card) => {
+  card.addEventListener("touchstart", () => {
+    card.classList.add("touch-active");
+  }, { passive: true });
+  card.addEventListener("touchend", () => {
+    setTimeout(() => card.classList.remove("touch-active"), 220);
+  }, { passive: true });
+  card.addEventListener("touchcancel", () => {
+    card.classList.remove("touch-active");
+  }, { passive: true });
+});
+
+const mobileRailWrap = document.querySelector(".rail-wrap");
+if (mobileRailWrap) {
+  const updateMobileRail = () => {
+    if (window.innerWidth <= 760) {
+      const wrapRect = mobileRailWrap.getBoundingClientRect();
+      const screenCenter = wrapRect.left + wrapRect.width / 2;
+      featureCards.forEach((card) => {
+        const cardRect = card.getBoundingClientRect();
+        const cardCenter = cardRect.left + cardRect.width / 2;
+        const dist = Math.abs(screenCenter - cardCenter);
+        const maxDist = wrapRect.width / 2;
+        const norm = Math.max(0, 1 - dist / maxDist);
+        if (norm > 0.65) {
+          card.classList.add("in-view");
+        } else {
+          card.classList.remove("in-view");
+        }
+      });
+    }
+  };
+  mobileRailWrap.addEventListener("scroll", updateMobileRail, { passive: true });
+  window.addEventListener("resize", updateMobileRail, { passive: true });
+}
+
 window.addEventListener("load", () => ScrollTrigger.refresh());
 
 const processTL = gsap.timeline({ scrollTrigger: { trigger: ".process", start: "top top", end: "+=1700", pin: true, scrub: 1, anticipatePin: 1 } });

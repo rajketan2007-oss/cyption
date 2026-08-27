@@ -657,8 +657,14 @@ button {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--line-strong);
-  border-radius: 4px;
-  will-change: transform;
+  border-radius: 6px;
+  will-change: transform, box-shadow, border-color;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+              border-color 0.35s ease,
+              opacity 0.25s ease;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .feature-card > span, .feature-card a {
@@ -670,6 +676,9 @@ button {
   font: clamp(3.5rem, 6vw, 6rem)/1 var(--display);
   margin: auto 0 16px;
   letter-spacing: -0.1em;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: center;
+  display: inline-block;
 }
 
 .feature-card h3 {
@@ -697,6 +706,31 @@ button {
 
 .feature-card a b {
   font-size: 16px;
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Card Hover, Touch-Active & Mobile Focus states */
+.feature-card:hover,
+.feature-card:active,
+.feature-card.touch-active,
+.feature-card.in-view {
+  border-color: var(--lime);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45), 0 0 20px rgba(216, 255, 62, 0.18);
+}
+
+.feature-card:hover .card-mark,
+.feature-card:active .card-mark,
+.feature-card.touch-active .card-mark,
+.feature-card.in-view .card-mark {
+  transform: scale(1.16) rotate(8deg);
+}
+
+.feature-card:hover a b,
+.feature-card:active a b,
+.feature-card.touch-active a b,
+.feature-card.in-view a b {
+  transform: translate(4px, -4px);
 }
 
 .coral { background: #5d7900; color: var(--paper); }
